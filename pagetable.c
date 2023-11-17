@@ -1,9 +1,12 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include "phypages.h"
 
 #define PAGE_SIZE 128
 #define OFFSET_BITS 7
 #define PAGE_BITS 5
+
+int next_free_frame; // global tracker
 
 // PageTableEntry struct
 struct PageTableEntry
@@ -27,6 +30,7 @@ void initPageTable(struct PageTableEntry *page_table, int tableSize)
 {
     int i;
 
+
     for (i = 0; i < tableSize; i++)
     {
         initPageTableEntry(&page_table[i], i);
@@ -43,24 +47,45 @@ int handlePageFault(struct PageTableEntry *page_table, int tableSize)
 
     for (i = 0; i < tableSize; i++)
     {
-        if (page_table[i].isValid && page_table[i].lru_counter < oldestCounter)
+        if (!page_table[i].isValid)
         {
-            // Update the LRU counter
-            oldestCounter = page_table[i].lru_counter;
             // Update the index of the
+            oldestIndex = i;
+            break;
+        }
+        else if (page_table[i].lru_counter < oldestCounter)
+        {
+            oldestCounter = page_table[i].lru_counter;
             oldestIndex = i;
         }
     }
 
     if (oldestIndex != -1)
     {
+        if (allocateFrame() != -1)
+        {
+            if (page_table[oldestIndex].isValid)
+            {
+                deallocateFrame();
+            }
+    
+
         // frame to release/free
         int released = page_table[oldestIndex].frame_number;
         // update pte for new page
-        page_table[oldestIndex].isValid = 0;
+        page_table[oldestIndex].isValid = 1;
         page_table[oldestIndex].lru_counter = 0;
+
+        return released;
     }
+    else
+    {
+        return -1; // no free frame
+    }
+    }
+    return -1; // if nothing replaced return error
 }
+
 
 // Returns physical address if valid entry, else returns 0
 unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr)
@@ -75,6 +100,6 @@ unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsi
     }
     else
     {
-        int new_frame
+        return (unsigned long)(-1);
     }
 }
