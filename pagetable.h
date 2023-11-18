@@ -1,6 +1,8 @@
 #ifndef PAGETABLE_H
 #define PAGETABLE_H
 
+extern int page_faults;
+
 struct PageTableEntry
 {
     int frame_number;
@@ -10,6 +12,7 @@ struct PageTableEntry
 
 void initPageTableEntry(struct PageTableEntry *entry, int frame);
 void initPageTable(struct PageTableEntry *page_table, int tableSize);
+int handlePageFault(struct PageTableEntry *page_table, int tableSize);
 unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr);
 
 #endif
