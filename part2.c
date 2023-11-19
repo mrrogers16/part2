@@ -40,8 +40,10 @@ FILE *open_file_wb(char *filename)
 
 int main(int argc, char *argv[])
 {
-
+    int freeFrame = 1;
+    int pageFaults = 0;
     unsigned long virtual_addr, physical_addr;
+    int referenceCount = 0;
     FILE *input = open_file_rb(argv[1]);
     FILE *output = open_file_wb(argv[2]);
 
@@ -52,7 +54,7 @@ int main(int argc, char *argv[])
     }
 
     struct PageTableEntry page_table[PAGE_TABLE_SIZE];
-  
+    initPageTable(page_table,PAGE_TABLE_SIZE);
     
     if (argc != 3)
     {
@@ -62,7 +64,9 @@ int main(int argc, char *argv[])
 
     while(fread(&virtual_addr, sizeof(unsigned long), 1, input) == 1)
     {
-        physical_addr = translateVirtualToPhysical(page_table, virtual_addr);
+        physical_addr = translateVirtualToPhysical(page_table, virtual_addr, &freeFrame, &referenceCount,&pageFaults);
+      
+
         if(physical_addr == (unsigned long)(-1))
         {
             handlePageFault(page_table, PAGE_TABLE_SIZE);

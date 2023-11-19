@@ -82,19 +82,29 @@ int handlePageFault(struct PageTableEntry *page_table, int tableSize)
 }
 
 // Returns physical address if valid entry, else returns 0
-unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr)
+unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr, int * freeFrame, int* referenceCount, int* pageFaults)
 {
     int page_num = virtual_addr >> OFFSET_BITS;
-
+    int offset = virtual_addr & ((1 << OFFSET_BITS) - 1);
+    int frame_num;
     if (page_table[page_num].isValid)
     {
-        page_table[page_num].lru_counter++;
-        int offset = virtual_addr & ((1 << OFFSET_BITS) - 1);
-        int frame_num = page_table[page_num].frame_number;
-        return (frame_num << OFFSET_BITS) | offset;
+        page_table[page_num].lru_counter = *referenceCount;
+        *referenceCount++;
+        
+         frame_num = page_table[page_num].frame_number;
+        //return (frame_num << OFFSET_BITS) | offset;
+    }
+    else if (*freeFrame < 8)
+    {
+        frame_num = *freeFrame;
+        *freeFrame++;
+        *pageFaults++;
+        //Do freeframe for frame_num
     }
     else
     {
-        return(unsigned long)(-1);
+        //LRU call.
+
     }
 }
