@@ -20,7 +20,7 @@ struct PageTableEntry
 // Initiate one page table entry
 void initPageTableEntry(struct PageTableEntry *entry, int frame)
 {
-    entry->frame_number = frame;
+    //entry->frame_number = frame;
     entry->isValid = 0;
     entry->lru_counter = 0;
 }
@@ -41,48 +41,40 @@ int handlePageFault(struct PageTableEntry *page_table, int tableSize)
 {
     int i;
     // initially invalid index
-    int oldestIndex = -1;
+    int oldestIndex = 0;
     // make it far far away
-    int oldestCounter = INT_MAX;
+    //int oldestCounter = INT_MAX;
+    int lowestRef = page_table[1].lru_counter;
 
     for (i = 0; i < tableSize; i++)
     {
-        if (!page_table[i].isValid)
+        if (page_table[i].isValid)
         {
             // Update the index of the
             oldestIndex = i;
+            lowestRef = page_table[i].lru_counter;
+
             break;
         }
-        else if (page_table[i].lru_counter < oldestCounter)
-        {
-            oldestCounter = page_table[i].lru_counter;
-            oldestIndex = i;
-        }
     }
-
-    if (oldestIndex != -1)
+    
+    printf("\nthis is the oldestIndex Value: %d\n", oldestIndex);
+    for (i = oldestIndex; i < tableSize; i++)
     {
-        int allocatedFrame = allocateFrame();
-        if (allocatedFrame != -1)
+        if (page_table[i].isValid && page_table[i].lru_counter < lowestRef)
         {
-            if(page_table[oldestIndex].isValid)
-            {
-                page_table[oldestIndex].isValid = 0;
-            }
-            // frame to release/free
-            page_table[oldestIndex].frame_number = allocatedFrame;
-            // update pte for new page
-            page_table[oldestIndex].isValid = 1;
-            page_table[oldestIndex].lru_counter = 0;
-
-            return allocatedFrame;
+            oldestIndex = i;
+            lowestRef = page_table[i].lru_counter;
         }
     }
-    return -1; // if nothing replaced return error
+
+    page_table[oldestIndex].isValid = 0;
+
+    return page_table[oldestIndex].frame_number;
 }
 
 // Returns physical address if valid entry, else returns 0
-unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr, int * freeFrame, int* referenceCount, int* pageFaults)
+unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsigned long virtual_addr, int *freeFrame, int *referenceCount, int *pageFaults, int tableSize)
 {
     int page_num = virtual_addr >> OFFSET_BITS;
     int offset = virtual_addr & ((1 << OFFSET_BITS) - 1);
@@ -90,21 +82,25 @@ unsigned long translateVirtualToPhysical(struct PageTableEntry *page_table, unsi
     if (page_table[page_num].isValid)
     {
         page_table[page_num].lru_counter = *referenceCount;
-        *referenceCount++;
-        
-         frame_num = page_table[page_num].frame_number;
-        //return (frame_num << OFFSET_BITS) | offset;
+        (*referenceCount)++;
+        frame_num = page_table[page_num].frame_number;
+        // return (frame_num << OFFSET_BITS) | offset;
     }
     else if (*freeFrame < 8)
     {
-        frame_num = *freeFrame;
-        *freeFrame++;
-        *pageFaults++;
-        //Do freeframe for frame_num
+        frame_num = (*freeFrame);
+        (*freeFrame)++;
+        (*pageFaults)++;
+        // Do freeframe for frame_num
     }
     else
     {
-        //LRU call.
-
+        frame_num = handlePageFault(page_table, tableSize);
+        (*pageFaults)++;
     }
+    page_table[page_num].isValid = 1;
+    page_table[page_num].frame_number = frame_num;
+    page_table[page_num].lru_counter = *referenceCount;
+    (*referenceCount)++;
+    return (frame_num << OFFSET_BITS) | offset;
 }

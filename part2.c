@@ -47,40 +47,41 @@ int main(int argc, char *argv[])
     FILE *input = open_file_rb(argv[1]);
     FILE *output = open_file_wb(argv[2]);
 
-    if(initializeFrame(TOTAL_FRAMES) != 0)
+    if (initializeFrame(TOTAL_FRAMES) != 0)
     {
         fprintf(stderr, "Error initializing free frames list.");
         return -1;
     }
 
     struct PageTableEntry page_table[PAGE_TABLE_SIZE];
-    initPageTable(page_table,PAGE_TABLE_SIZE);
-    
+    initPageTable(page_table, PAGE_TABLE_SIZE);
+
     if (argc != 3)
     {
         fprintf(stderr, "Usage: ./%s input_file output_file", argv[0]);
         return -1;
     }
 
-    while(fread(&virtual_addr, sizeof(unsigned long), 1, input) == 1)
+    while (fread(&virtual_addr, sizeof(unsigned long), 1, input) == 1)
     {
-        physical_addr = translateVirtualToPhysical(page_table, virtual_addr, &freeFrame, &referenceCount,&pageFaults);
-      
+        physical_addr = translateVirtualToPhysical(page_table, virtual_addr, &freeFrame, &referenceCount, &pageFaults, PAGE_TABLE_SIZE);
 
-        if(physical_addr == (unsigned long)(-1))
-        {
-            handlePageFault(page_table, PAGE_TABLE_SIZE);
-            page_faults++;
-            physical_addr = translateVirtualToPhysical(page_table, virtual_addr);
-        }
-        if(physical_addr != (unsigned long)(-1))
-        {
-            fwrite(&physical_addr, sizeof(unsigned long), 1, output);
-        }
+        printf("here it is %lx\n", physical_addr);
+
+        fwrite(&physical_addr, sizeof(unsigned long), 1, output);
+        // if(physical_addr == (unsigned long)(-1))
+        // {
+        //     handlePageFault(page_table, PAGE_TABLE_SIZE);
+        //     page_faults++;
+        //     physical_addr = translateVirtualToPhysical(page_table, virtual_addr);
+        // }
+        // if(physical_addr != (unsigned long)(-1))
+        // {
+        //     fwrite(&physical_addr, sizeof(unsigned long), 1, output);
+        // }
     }
 
-
-    printf("Page Faults: %u\n", page_faults);
+    printf("Page Faults: %u\n", pageFaults);
 
     fclose(input);
     fclose(output);
