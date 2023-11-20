@@ -7,8 +7,6 @@
 #define OFFSET_BITS 7
 #define PAGE_BITS 5
 
-int max_frame;
-
 // PageTableEntry struct
 struct PageTableEntry
 {
@@ -20,7 +18,7 @@ struct PageTableEntry
 // Initiate one page table entry
 void initPageTableEntry(struct PageTableEntry *entry, int frame)
 {
-    //entry->frame_number = frame;
+    // entry->frame_number = frame;
     entry->isValid = 0;
     entry->lru_counter = 0;
 }
@@ -42,23 +40,23 @@ int handlePageFault(struct PageTableEntry *page_table, int tableSize)
     int i;
     // initially invalid index
     int oldestIndex = 0;
-    // make it far far away
-    //int oldestCounter = INT_MAX;
+
     int lowestRef = page_table[1].lru_counter;
 
     for (i = 0; i < tableSize; i++)
     {
         if (page_table[i].isValid)
         {
-            // Update the index of the
+            // Update the index
             oldestIndex = i;
             lowestRef = page_table[i].lru_counter;
 
             break;
         }
     }
-    
-    printf("\nthis is the oldestIndex Value: %d\n", oldestIndex);
+
+    // printf("\nthis is the oldestIndex Value: %d\n", oldestIndex);
+
     for (i = oldestIndex; i < tableSize; i++)
     {
         if (page_table[i].isValid && page_table[i].lru_counter < lowestRef)

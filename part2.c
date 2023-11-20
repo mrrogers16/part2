@@ -66,8 +66,6 @@ int main(int argc, char *argv[])
     {
         physical_addr = translateVirtualToPhysical(page_table, virtual_addr, &freeFrame, &referenceCount, &pageFaults, PAGE_TABLE_SIZE);
 
-        printf("here it is %lx\n", physical_addr);
-
         fwrite(&physical_addr, sizeof(unsigned long), 1, output);
         // if(physical_addr == (unsigned long)(-1))
         // {
