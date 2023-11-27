@@ -67,16 +67,6 @@ int main(int argc, char *argv[])
         physical_addr = translateVirtualToPhysical(page_table, virtual_addr, &freeFrame, &referenceCount, &pageFaults, PAGE_TABLE_SIZE);
 
         fwrite(&physical_addr, sizeof(unsigned long), 1, output);
-        // if(physical_addr == (unsigned long)(-1))
-        // {
-        //     handlePageFault(page_table, PAGE_TABLE_SIZE);
-        //     page_faults++;
-        //     physical_addr = translateVirtualToPhysical(page_table, virtual_addr);
-        // }
-        // if(physical_addr != (unsigned long)(-1))
-        // {
-        //     fwrite(&physical_addr, sizeof(unsigned long), 1, output);
-        // }
     }
 
     printf("Page Faults: %u\n", pageFaults);
